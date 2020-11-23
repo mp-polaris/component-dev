@@ -8,7 +8,7 @@
                          :class="['col-sm-' + 12/inputType.length,'col-xs-' + 12/inputType.length]"
                          v-for="(type,index) in inputType" :key="type.name"
                          @click="exchangeType(index)">
-                        <a class="holder-style p15" :class="{'holder-active':currentIndex == index}">
+                        <a class="holder-style p15" :class="{'holder-active':currentTypeIndex == index}">
                             <span class="fa fa-align-left holder-icon"></span>
                             <br/>
                             {{type.label}}
@@ -26,28 +26,23 @@
                     simple
                     style="margin-top: 20px"
             >
-                <el-step title="步骤 1"></el-step>
-                <el-step title="步骤 2"></el-step>
-                <el-step title="步骤 3"></el-step>
+                <el-step :title="'步骤' + num" v-for="num in step" :key="num"></el-step>
             </el-steps>
 
             <el-form
                     label-position="right"
                     label-width="80px"
                     :model="inputForm">
-                <div>
-                    <solt name="1"></solt>
+                <div v-show="active == index" v-for="(num,index) in step" :key="num">
+                    <slot :name="'step0' + num"></slot>
                 </div>
-                <solt name="2"></solt>
-                <solt name="3"></solt>
-
             </el-form>
 
-            <el-button style="float:right;margin-top:50px;margin-right:28%;" :disabled="active!=3" @click="save">保存
+            <el-button style="float:right;margin-top:50px;margin-right:28%;" :disabled="active!=step" @click="save">保存
             </el-button>
-            <el-button style="float:right;margin-top:50px;margin-right:2%;" :disabled="active==3" @click="next">下一步
+            <el-button style="float:right;margin-top:50px;margin-right:2%;" :disabled="active==step" @click="next">下一步
             </el-button>
-            <el-button style="float:right;margin-top:50px;margin-right:2%;" :disabled="active==1" @click="last">上一步
+            <el-button style="float:right;margin-top:50px;margin-right:2%;" :disabled="active==0" @click="last">上一步
             </el-button>
         </div>
     </div>
@@ -68,35 +63,36 @@
         },
         data() {
             return {
-                currentIndex: 0,//当前分类下标
-                active: 1,//步骤条
+                currentTypeIndex: 0,//当前分类下标
+                active: 0,//步骤条
             };
-        },
-        computed: {
-            // newTypes(){
-            //     let _this = this
-            //      return this.inputType.filter(function (item,index) {
-            //         if(_this.currentIndex == index && _this.active == 1) return true;
-            //     });
-            // }
         },
         methods: {
             exchangeType(index) {
-                this.currentIndex = index
-                this.$emit('currentIndex', this.currentIndex)
-                this.active = 1;
+                this.currentTypeIndex = index
+                this.$emit('currentTypeIndex', this.currentTypeIndex)
+                this.active = 0;
+                //对主表和附表数据进行置空处理
                 Object.keys(this.inputForm).forEach(key => {
-                    this.inputForm[key] = ''
+                    if(!(this.inputForm[key] instanceof Array)) {
+                        this.inputForm[key] = ''
+                    } else {
+                        this.inputForm[key].forEach(function(e){
+                            Object.keys(e).forEach(key => {
+                                e[key] = ''
+                            })
+                        });
+                    }
                 })
             },
             last() {
-                if (this.active-- < 1) this.active = 1;
+                if (this.active-- < 0) this.active = 0;
             },
             next() {
-                if (this.active++ > 2) this.active = 2;
+                if (this.active++ > this.step) this.active = this.step;
             },
             save() {
-
+                console.log(this.inputForm)
             },
         }
     };
